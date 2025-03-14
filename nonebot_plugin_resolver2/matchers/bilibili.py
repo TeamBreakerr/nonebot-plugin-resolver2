@@ -195,7 +195,23 @@ async def _(bot: Bot, text: str = ExtractText(), keyword: str = Keyword()):
         segs.append(
             f"⚠️ 当前视频时长 {video_duration // 60} 分钟，超过管理员设置的最长时间 {DURATION_MAXIMUM // 60} 分钟!"
         )
-    await bilibili.send(construct_nodes(bot.self_id, segs))
+
+    # 构建单条消息
+    message = Message()
+    message.append(share_prefix + video_title + "\n")  # 标题后加换行
+    message.append(MessageSegment.image(video_cover))  # 封面图片
+    if video_desc:
+        message.append("\n简介: " + video_desc)  # 前面加换行
+    if ai_summary:
+        message.append("\n" + ai_summary)  # 前面加换行
+    if video_duration > DURATION_MAXIMUM:
+        message.append(
+            f"\n⚠️ 当前视频时长 {video_duration // 60} 分钟，超过管理员设置的最长时间 {DURATION_MAXIMUM // 60} 分钟!"
+        )
+    
+    # 发送单条组合消息
+    await bilibili.send(message)
+
     if video_duration > DURATION_MAXIMUM:
         logger.info(f"video duration > {DURATION_MAXIMUM}, do not download")
         return
