@@ -168,11 +168,11 @@ async def _(text: str = ExtractText(), keyword: str = Keyword()):
         video_info.display_info,
         video_info.ai_summary,
     ]
-    if video_info.video_duration > DURATION_MAXIMUM:
-        segs.append(
-            f"⚠️ 当前视频时长 {video_info.video_duration // 60} 分钟, "
-            f"超过管理员设置的最长时间 {DURATION_MAXIMUM // 60} 分钟!"
-        )
+    # if video_info.video_duration > DURATION_MAXIMUM:
+    #    segs.append(
+    #        f"⚠️ 当前视频时长 {video_info.video_duration // 60} 分钟, "
+    #        f"超过管理员设置的最长时间 {DURATION_MAXIMUM // 60} 分钟!"
+    #    )
     await send_segments(segs)
 
     if video_info.video_duration > DURATION_MAXIMUM:
