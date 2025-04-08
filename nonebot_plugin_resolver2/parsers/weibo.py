@@ -82,30 +82,31 @@ class WeiBo(BaseParser):
                     raise ParseException(f"获取数据失败 {resp.status} {resp.reason}")
                 if "application/json" not in resp.headers.get("content-type", ""):
                     raise ParseException("获取数据失败 content-type is not application/json")
-                resp = await resp.json()
+                resp_json = await resp.json()
 
-        weibo_data = resp["data"]
-        text, status_title, source, region_name, pics, page_info = (
-            weibo_data.get(key)
-            for key in [
-                "text",
-                "status_title",
-                "source",
-                "region_name",
-                "pics",
-                "page_info",
-            ]
-        )
+        weibo_data = resp_json.get("data", {})
+        text = weibo_data.get("text", "")
+        status_title = weibo_data.get("status_title", "")
+        source = weibo_data.get("source", "")
+        region_name = weibo_data.get("region_name", "")
+        pics = weibo_data.get("pics") or []
+        page_info = weibo_data.get("page_info") or {}
 
-        # 图集
+        # 处理图集
         if pics:
             pics = [x["large"]["url"] for x in pics]
 
-        videos = page_info.get("urls")
-        video_url: str = videos.get("mp4_720p_mp4") or videos.get("mp4_hd_mp4") if videos else ""
+        # 安全获取视频 URL
+        urls = page_info.get("urls") or {}
+        # 优先 mp4_720p_mp4，其次 mp4_hd_mp4，否则空字符串
+        video_url = urls.get("mp4_720p_mp4") or urls.get("mp4_hd_mp4") or ""
+
+        # 去除 HTML 标签，拼接标题
+        clean_text = re.sub(r"<[^>]+>", "", text)
+        title = f"{clean_text}\n{status_title}\n{source}\t{region_name}" if status_title or region_name else clean_text
 
         return VideoInfo(
-            title=f"{re.sub(r'<[^>]+>', '', text)}\n{status_title}\n{source}\t{region_name if region_name else ''}",
+            title=title,
             video_url=video_url,
             images=pics,
             author=VideoAuthor(name=source),
